@@ -1,0 +1,58 @@
+---
+title: "Introduction to chai"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to chai}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Install
+
+```{r eval=FALSE}
+remotes::install_github("user/chai")
+```
+
+## Basic usage
+
+##### Generate a simulation data
+
+```{r}
+set.seed(123)
+n = 100           # Total number of features
+n0 <- 90          # Number of Null hypotheses
+n1 <- 5           # Number of Alternative 1 hypotheses
+n2 <- 5           # Number of Alternative 2 hypotheses
+
+z0 <- rnorm(n0, mean = 0, sd = 1)      # z-statistics belong to the Null
+x0 <- rnorm(n0, mean = 0, sd = 1)      # Side information belong to the Null
+
+z1 <- rnorm(n1, mean = 3, sd = 0.5)    # z-statistics belong to the Alternative 1
+x1 <- rnorm(n1, mean = 3, sd = 1)      # Side information belong to the Alternative 1
+
+z2 <- rnorm(n2, mean = -3, sd = 0.5)   # z-statistics belong to the Alternative 2
+x2 <- rnorm(n2, mean = -3, sd = 1)     # Side information belong to the Alternative 2
+
+z <- c(z0, z1, z2)    # z-statistics includes 3 Gaussian
+X <- c(x0, x1, x2)    # Side information includes 3 Gaussian
+
+gt <- seq((n0+1), n)    # Ground Truth
+
+```
+
+
+##### Fit the model
+
+```{r}
+library(chai)
+
+chai_res <- chai(z = z, X = X, M = 100)
+
+lFDRselect(chai_res$lFDR, 0.05)
+```
+
+
