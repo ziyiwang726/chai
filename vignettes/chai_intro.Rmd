@@ -50,7 +50,7 @@ gt <- seq((n0+1), n)    # Ground Truth
 ```{r}
 library(chai)
 
-chai_res <- chai(z = z, X = X, M = 100)
+chai_res <- chai(z = z, X = X, R = 100)
 
 lFDRselect(chai_res$lFDR, 0.05)
 ```
