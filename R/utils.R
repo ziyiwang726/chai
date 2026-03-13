@@ -66,18 +66,18 @@ minRatioForX_custom <- function(post_w, m, v, lower=-10, upper=10) {
 #   return(ord[1:k])
 # }
 
-lFDRselect <- function(obj_or_lfdr, q = 0.05, max_lFDR = 1) {
-  if (is.list(obj_or_lfdr) && !is.null(obj_or_lfdr$avgFDR)) {
-    ord <- obj_or_lfdr$ord
-    lFDR_sorted <- obj_or_lfdr$lFDR_sorted
-    avgFDR <- obj_or_lfdr$avgFDR
-  } else {
-    lfdr <- as.numeric(obj_or_lfdr)
-    ord <- order(lfdr)
-    lFDR_sorted <- lfdr[ord]
-    avgFDR <- cumsum(lFDR_sorted) / seq_along(lFDR_sorted)
-  }
-  valid <- which(avgFDR <= q & lFDR_sorted <= max_lFDR)
-  if (length(valid) == 0) return(integer(0))
-  ord[seq_len(max(valid))]
-}
+# lFDRselect <- function(obj_or_lfdr, q = 0.05, max_lFDR = 1) {
+#   if (is.list(obj_or_lfdr) && !is.null(obj_or_lfdr$avgFDR)) {
+#     ord <- obj_or_lfdr$ord
+#     lFDR_sorted <- obj_or_lfdr$lFDR_sorted
+#     avgFDR <- obj_or_lfdr$avgFDR
+#   } else {
+#     lfdr <- as.numeric(obj_or_lfdr)
+#     ord <- order(lfdr)
+#     lFDR_sorted <- lfdr[ord]
+#     avgFDR <- cumsum(lFDR_sorted) / seq_along(lFDR_sorted)
+#   }
+#   valid <- which(avgFDR <= q & lFDR_sorted <= max_lFDR)
+#   if (length(valid) == 0) return(integer(0))
+#   ord[seq_len(max(valid))]
+# }

@@ -1,22 +1,59 @@
 #' Conditional Hypothesis testing using Auxiliary Information (chai) main function
+#'
 #' @param z A numeric vector that saving the z-statistics.
 #' @param X A numeric matrix/vector (covariates/side-information) that corresponding to z.
-#' @param K_vec An integer value or a range specifying the numbers of mixture components. Suggest use 2 or above. If there is a vector/range, the model will automatically select the "best" based on BIC. The default is K_vec = 2:6.
-#' @param R An integer value indicating the total number of samples the model generate to estimate the \eqn{\pi_0(x)}. The default is R = 100. More details please see the original paper.
+#' @param K_vec An integer value or a range specifying the numbers of mixture components.
+#' Suggest use 2 or above.
+#' If there is a vector/range, the model will automatically select the "best" based on BIC.
+#' The default is K_vec = 2:6.
+#' @param B An integer value indicating the total number of samples the model generate to estimate the \eqn{\pi_0(x)}.
+#' The default is B = 100. More details please see the original paper.
+#'
 #' @return A list with the following components:
 #' \item{z}{The input z-statistics.}
 #' \item{X}{The input X (side information).}
 #' \item{K}{The optimal number of mixture components.}
-#' \item{R}{The input R value.}
+#' \item{B}{The input B value.}
 #' \item{clFDR}{The conditional local FDR  of every hypotheses.}
 #' \item{pi0}{The estimated \eqn{\pi_0(x)} of every hypotheses.}
 #' \item{post_w}{The posterior weight \eqn{w_{ik}} of every hypotheses (\eqn{i}) belong to which component (\eqn{k}).}
 #' \item{ord}{The order of Hypothesis indices by increasing conditional local FDR (from smallest to largest).}
-#' \item{clFDR_sorted}{The sorted conditional local FDR (from smallest to largest).
+#' \item{clFDR_sorted}{The sorted conditional local FDR (from smallest to largest).}
+#'
+#' @seealso
+#' \code{\link[clfdrselect]{clfdrselect}} for the rejected hypotheses identified,
+#' \code{\link[performance]{performance}} for checking the model performance with known ground truth,
+#' \code{\link[direction]{direction}} for the direction of the rejected hypotheses (binary outcomes only).
+#'
+#' @import mclust
+#' @import admix
+#'
+#' @examples
+#' \dontrun{
+#' # Generate a simulation
+#' set.seed(123)
+#' n = 1000; n0 <- 950; n1 <- 50
+#' z0 <- rnorm(n0, mean = 0, sd = 1)
+#' x0 <- rnorm(n0, mean = 3, sd = 1)
+#' z1 <- rnorm(n1, mean = 3, sd = 1)
+#' x1 <- rnorm(n1, mean = 6, sd = 1)
+#' z <- c(z0, z1)
+#' X <- c(x0, x1)
+#' gt <- seq((n0+1), n)
+#'
+#' # Fit the model
+#' res <- chai(z, X, K_vec = 2:6, B = 100)
+#'
+#' # Check the rejection indices
+#' clfdrselect(res$clFDR, q = 0.05)
+#'
+#' # Check performance with ground truth
+#' performance(gt, clfdrselect(res$clFDR, q = 0.05))
+#' }
+
 #' @export
 
-
-chai <- function(z, X, K_vec = 2:6, R = 100) {
+chai <- function(z, X, K_vec = 2:6, B = 100) {
   # require(mclust); require(locfdr); require(admix); require(mvtnorm)
 
   df <- data.frame(as.data.frame(X))
@@ -41,7 +78,7 @@ chai <- function(z, X, K_vec = 2:6, R = 100) {
     post_w[i,] <- cp$post_weights
 
     set.seed(123)
-    rMix1 <- rGaussianMix(n = R, cp$post_weights, cp$cond_means, sqrt(cp$cond_vars))
+    rMix1 <- rGaussianMix(n = B, cp$post_weights, cp$cond_means, sqrt(cp$cond_vars))
 
     admixMod <- admix::admix_model(knownComp_dist = "norm",
                                    knownComp_param = c("mean" = 0, "sd" = 1))
@@ -65,7 +102,7 @@ chai <- function(z, X, K_vec = 2:6, R = 100) {
     z = z,
     X = X,
     K = fit$G,
-    R = R,
+    B = B,
     clFDR = lfdr_naive_all,
     pi0 = minRatioAll,
     post_w = post_w,
