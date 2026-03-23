@@ -7,6 +7,12 @@ Conditional Hypothesis testing using Auxiliary Information
 
 `chai` is an R package developed for a covariate-informed statistical framework. It leverages auxiliary information to enhance the statistical power of multiple hypothesis testing while controlling the false discovery rate (FDR) of high-dimensional data (such as 16S rRNA and WGS microbiome sequencing).
 
+* `chai()` is the main function for running the conditional hypothesis testing using auxiliary information
+* `clfdrselect()` for the rejected hypotheses identified.
+* `performance()` for checking the model performance with known ground truth
+* `direction()` for the direction of the rejected hypotheses (binary outcomes only)
+
+
 ## Authors
 
 **Ziyi Wang, Satabdi Saha, Christine B. Peterson, Yushu Shi**
@@ -50,7 +56,7 @@ We then fit both $z$ and $x$ into the funciton `chai`:
 res <- chai(z, X, K_vec = 2:6, B = 100)
 ```
 
-Examined which hypotheses were rejected at $q = 0.05$ (target FDR level) using the function `clfdrselect`:
+Examined which hypotheses were rejected at $q = 0.05$ (target FDR level) using the function `clfdrselect()`:
 ```R
 # Check the rejections
 clfdrselect(res$clFDR, q = 0.05)
