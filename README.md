@@ -34,7 +34,9 @@ remotes::install_github("ziyiwang726/chai")
 
 ### Generate a simulation
 We assumed a total 1000 hypotheses, where the first 950 are null hypotheses with $z \sim N(0, 1)$, and the remaining 50 are alternatives with $z \sim N(3, 1)$. 
-Correspondingly, $x$ was used as side information: for the first 950 hypotheses, $x \sim N(3, 1)$, and for the last 50 hypotheses, $x \sim N(6, 1).
+
+Correspondingly, $x$ was used as side information: for the first 950 hypotheses, $x \sim N(3, 1)$, and for the last 50 hypotheses, $x \sim N(6, 1)$.
+
 Thus, the true alternative hypothesis indices are from 951 to 1000. 
 
 ```R
@@ -57,12 +59,14 @@ res <- chai(z, X, K_vec = 2:6, B = 100)
 ```
 
 Examined which hypotheses were rejected at $q = 0.05$ (target FDR level) using the function `clfdrselect()`:
+
 ```R
 # Check the rejections
 clfdrselect(res$clFDR, q = 0.05)
 ```
 
 Based on these rejections and the true ground truth, we evaluated the model's FDP and statistical power:
+
 ```R
 # Check performance with ground truth
 performance(gt, clfdrselect(res$clFDR, q = 0.05))
