@@ -51,8 +51,6 @@ fit_mclust_with_fallback <- function(df, K_vec = 2:6, timeout_sec = 30, jitter_s
   mclust::Mclust(df_stable, G = K_vec)
 }
 
-
-
 # This FDP is without cutoff
 computeFDP<-function(lFDR,trueIndex,alpha) {
   df<-data.frame(cbind(1:length(lFDR),lFDR))
