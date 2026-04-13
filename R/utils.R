@@ -1,11 +1,4 @@
-#' Fit Mclust with fallback
-#'
-#' @param df Data frame for mixture modeling.
-#' @param K_vec Candidate numbers of mixture components.
-#' @param timeout_sec Timeout in seconds.
-#' @param jitter_sd Jitter standard deviation.
-#'
-#' @return A fitted \code{Mclust} object.
+# Fit Mclust with fallback
 fit_mclust_with_fallback <- function(df, K_vec = 2:6, timeout_sec = 30, jitter_sd = 1e-6) {
   fit <- NULL
   fit_error <- NULL
