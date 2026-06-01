@@ -58,7 +58,7 @@ get_chai_seed <- function(default = 123L) {
   if (is.na(seed_value)) default else seed_value
 }
 
-chai <- function(z, X, K_vec = 2:10, B = 100) {
+chai <- function(z, X, K_vec = 2:6, B = 100) {
   # require(mclust); require(locfdr); require(admix); require(mvtnorm)
 
   df <- data.frame(as.data.frame(X))
