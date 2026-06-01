@@ -52,7 +52,13 @@
 #' }
 
 #' @export
-chai <- function(z, X, K_vec = 2:6, B = 100) {
+get_chai_seed <- function(default = 123L) {
+  option_seed <- getOption("chai.seed", default)
+  seed_value <- suppressWarnings(as.integer(option_seed))
+  if (is.na(seed_value)) default else seed_value
+}
+
+chai <- function(z, X, K_vec = 2:10, B = 100) {
   # require(mclust); require(locfdr); require(admix); require(mvtnorm)
 
   df <- data.frame(as.data.frame(X))
@@ -76,7 +82,7 @@ chai <- function(z, X, K_vec = 2:6, B = 100) {
     cp <- conditionalParamsForX_custom(xVec, np$pi, np$mu, np$Sigma)
     post_w[i,] <- cp$post_weights
 
-    set.seed(123)
+    set.seed(get_chai_seed())
     rMix1 <- rGaussianMix(n = B, cp$post_weights, cp$cond_means, sqrt(cp$cond_vars))
 
     admixMod <- admix::admix_model(knownComp_dist = "norm",
