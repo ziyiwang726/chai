@@ -52,13 +52,8 @@
 #' }
 
 #' @export
-get_chai_seed <- function(default = 123L) {
-  option_seed <- getOption("chai.seed", default)
-  seed_value <- suppressWarnings(as.integer(option_seed))
-  if (is.na(seed_value)) default else seed_value
-}
 
-chai <- function(z, X, K_vec = 2:6, B = 100) {
+chai <- function(z, X, K_vec = 2:10, B = 100) {
   # require(mclust); require(locfdr); require(admix); require(mvtnorm)
 
   df <- data.frame(as.data.frame(X))
