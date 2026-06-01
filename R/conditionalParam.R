@@ -5,6 +5,16 @@ conditionalParamsForX_custom <- function(xVec,         # length q
   K <- length(piVec)
   q <- nrow(muMat)-1
   stopifnot(length(xVec) == q)
+  if (anyNA(piVec) || any(!is.finite(piVec)) || any(piVec < 0) || sum(piVec) <= 0) {
+    stop("piVec must be finite, non-negative, and sum to a positive value.", call. = FALSE)
+  }
+
+  make_posdef <- function(S, eps = 1e-6) {
+    S_sym <- (S + t(S)) / 2
+    ev <- eigen(S_sym, symmetric = TRUE)
+    vals <- pmax(ev$values, eps)
+    ev$vectors %*% diag(vals, length(vals)) %*% t(ev$vectors)
+  }
 
   # Get Sigma_k
   getSigma <- if (is.array(SigmaList)) {
@@ -18,37 +28,44 @@ conditionalParamsForX_custom <- function(xVec,         # length q
     stop("SigmaList must be a 3‑D array or a list of covariance matrices.")
   }
 
-  # # Test if the sigma_xx is positive definite -> TRUE/FALSE
-  # is_posdef <- function(S) {
-  #   ev <- eigen(S, symmetric = TRUE, only.values = TRUE)$values
-  #   all(ev > 1e-8)
-  # }
-  #
   # Posterior weights p(k | x) ∝ pi_k * N_q(x | mu_xk, Sigma_xxk)
   logNumer <- numeric(K)
   for (k in seq_len(K)) {
     Sigmak      <- getSigma(k)
     Sigma_xx <- Sigmak[1:q, 1:q, drop = FALSE]
+    Sigma_xx_safe <- make_posdef(Sigma_xx)
     mu_xk     <- muMat[1:q, k]
 
-    # Sigma_xx_safe <- Sigma_xx
-    # if (!is_posdef(Sigma_xx_safe)) {
-    #   ev <- eigen(Sigma_xx_safe, symmetric = TRUE)
-    #   vals <- pmax(ev$values, 1e-6)
-    #   Sigma_xx_safe <- ev$vectors %*% diag(vals, length(vals)) %*% t(ev$vectors)
-    # }
-
-    # Sigma_pd <- Sigma_xx + diag(1e-10, q)
-    # logdens <- mvtnorm::dmvnorm(xVec, mean = mu_xk, sigma = Sigma_pd, log = TRUE)
-
-    logdens <- mvtnorm::dmvnorm(xVec, mean = mu_xk, sigma = Sigma_xx, log = TRUE)
-    logNumer[k] <- log(piVec[k]) + logdens
+    logdens <- mvtnorm::dmvnorm(xVec, mean = mu_xk, sigma = Sigma_xx_safe, log = TRUE)
+    if (!is.finite(logdens) || !is.finite(piVec[k]) || piVec[k] <= 0) {
+      logNumer[k] <- -Inf
+    } else {
+      logNumer[k] <- log(piVec[k]) + logdens
+    }
   }
 
-  # log-sum-exp for stability
-  m <- max(logNumer)
-  numerator <- exp(logNumer - m)
-  post_w <- numerator / sum(numerator)
+  # If one or more components dominate with +Inf log-prob, assign mass to them uniformly.
+  pos_inf <- is.infinite(logNumer) & (logNumer > 0)
+  if (any(pos_inf)) {
+    post_w <- numeric(K)
+    post_w[pos_inf] <- 1 / sum(pos_inf)
+  } else {
+    # log-sum-exp for stability
+    finite_idx <- is.finite(logNumer)
+    if (!any(finite_idx)) {
+      post_w <- rep(1 / K, K)
+    } else {
+      m <- max(logNumer[finite_idx])
+      numerator <- rep(0, K)
+      numerator[finite_idx] <- exp(logNumer[finite_idx] - m)
+      numerator_sum <- sum(numerator)
+      if (!is.finite(numerator_sum) || numerator_sum <= 0) {
+        post_w <- rep(1 / K, K)
+      } else {
+        post_w <- numerator / numerator_sum
+      }
+    }
+  }
 
 
   # Conditional z | x, k parameters
@@ -58,6 +75,7 @@ conditionalParamsForX_custom <- function(xVec,         # length q
   for (k in seq_len(K)) {
     Sigmak       <- getSigma(k)
     Sigma_xx <- Sigmak[1:q, 1:q, drop = FALSE]     # Σ_xx
+    Sigma_xx_safe <- make_posdef(Sigma_xx)
     Sigma_xz <- Sigmak[1:q, q+1, drop = FALSE]     # Σ_xz (q×1)
     Sigma_zx <- t(Sigma_xz)                        # Σ_zx (1×q)
     sigma_zz <- Sigmak[q+1, q+1, drop = FALSE]     # σ_zz
@@ -66,7 +84,7 @@ conditionalParamsForX_custom <- function(xVec,         # length q
     mu_z <- muMat[q+1, k]
 
     # Solve y = Σ_xx^{-1}
-    R <- chol(Sigma_xx + diag(1e-10, q))             # ridge = 1e-10, for stability
+    R <- chol(Sigma_xx_safe + diag(1e-10, q))        # ridge = 1e-10, for stability
     solve_Sxx <- function(v) backsolve(R, backsolve(R, v, transpose = TRUE))
 
     delta_x      <- xVec - mu_x                      # (x - μ_x) (q)
@@ -74,7 +92,7 @@ conditionalParamsForX_custom <- function(xVec,         # length q
     Sxx_inv_xz   <- solve_Sxx(Sigma_xz)              # Σ_xx^{-1}Σ_xz (q×1) - for var
 
     cond_means[k] <- as.numeric(mu_z + Sigma_zx %*% Sxx_inv_dx)
-    cond_vars[k] <- as.numeric(sigma_zz - Sigma_zx %*% Sxx_inv_xz)
+    cond_vars[k] <- max(as.numeric(sigma_zz - Sigma_zx %*% Sxx_inv_xz), 1e-8)
   }
 
   list(
