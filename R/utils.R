@@ -1,5 +1,16 @@
+get_chai_seed <- function(default = 123L) {
+  option_seed <- getOption("chai.seed", default)
+  seed_value <- suppressWarnings(as.integer(option_seed))
+  if (is.na(seed_value)) {
+    default
+  } else {
+    seed_value
+  }
+}
+
+
 # Fit Mclust with fallback
-fit_mclust_with_fallback <- function(df, K_vec = 2:6, timeout_sec = 30, jitter_sd = 1e-6) {
+fit_mclust_with_fallback <- function(df, K_vec = 2:10, timeout_sec = 30, jitter_sd = 1e-6) {
   fit <- NULL
   fit_error <- NULL
 
@@ -43,7 +54,7 @@ fit_mclust_with_fallback <- function(df, K_vec = 2:6, timeout_sec = 30, jitter_s
     scaled
   }))
 
-  set.seed(123)
+  set.seed(get_chai_seed())
   for (col_name in names(df_stable)) {
     df_stable[[col_name]] <- df_stable[[col_name]] + stats::rnorm(nrow(df_stable), sd = jitter_sd)
   }
@@ -109,28 +120,3 @@ minRatioForX_custom <- function(post_w, m, v, lower=-10, upper=10) {
   list(z_star = res$minimum, ratio_star = res$objective)
 }
 
-# lFDRselect <- function(lFDR, threshold = q, max_lFDR = max_lFDR) {
-#   ord <- order(lFDR)
-#   lFDR_sorted <- lFDR[ord]
-#   avgFDR <- cumsum(lFDR_sorted) / seq_along(lFDR_sorted)
-#   valid <- which(avgFDR <= threshold & lFDR_sorted <= max_lFDR)
-#   if (length(valid) == 0) return(integer(0))
-#   k <- max(valid)
-#   return(ord[1:k])
-# }
-
-# lFDRselect <- function(obj_or_lfdr, q = 0.05, max_lFDR = 1) {
-#   if (is.list(obj_or_lfdr) && !is.null(obj_or_lfdr$avgFDR)) {
-#     ord <- obj_or_lfdr$ord
-#     lFDR_sorted <- obj_or_lfdr$lFDR_sorted
-#     avgFDR <- obj_or_lfdr$avgFDR
-#   } else {
-#     lfdr <- as.numeric(obj_or_lfdr)
-#     ord <- order(lfdr)
-#     lFDR_sorted <- lfdr[ord]
-#     avgFDR <- cumsum(lFDR_sorted) / seq_along(lFDR_sorted)
-#   }
-#   valid <- which(avgFDR <= q & lFDR_sorted <= max_lFDR)
-#   if (length(valid) == 0) return(integer(0))
-#   ord[seq_len(max(valid))]
-# }
