@@ -54,6 +54,7 @@
 #' @export
 
 chai <- function(z, X, K_vec = 2:10, B = 100) {
+  message("chai version: ", packageVersion("yourPackageName"))
   # require(mclust); require(locfdr); require(admix); require(mvtnorm)
 
   df <- data.frame(as.data.frame(X))
