@@ -59,7 +59,7 @@ get_chai_seed <- function(default = 123L) {
 }
 
 chai <- function(z, X, K_vec = 2:6, B = 100) {
-  message("chai version: ", packageVersion("yourPackageName"))
+  message("chai version: ", packageVersion("chai"))
   # require(mclust); require(locfdr); require(admix); require(mvtnorm)
 
   df <- data.frame(as.data.frame(X))
