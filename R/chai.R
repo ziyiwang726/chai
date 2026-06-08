@@ -82,7 +82,7 @@ chai <- function(z, X, K_vec = 2:10, B = 100) {
     rMix1 <- rGaussianMix(n = B, cp$post_weights, cp$cond_means, sqrt(cp$cond_vars))
 
     admixMod <- admix::admix_model(knownComp_dist = "norm",
-                                   knownComp_param = c("mean" = 0, "sd" = 1))
+                                   knownComp_param = list("mean" = 0, "sd" = 1))
 
     result <- admix::admix_estim(samples = list(rMix1),
                                  admixMod = list(admixMod),
